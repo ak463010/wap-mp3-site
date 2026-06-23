@@ -1,0 +1,74 @@
+[
+  {
+    "id": "upd-001",
+    "type": "song_added",
+    "refId": "sample-001",
+    "title": "Blinding Lights",
+    "description": "New song \"Blinding Lights\" by The Weeknd",
+    "icon": "\ud83c\udfb5",
+    "createdAt": "2026-06-20T10:00:00Z"
+  },
+  {
+    "id": "upd-002",
+    "type": "news_posted",
+    "refId": "news-001",
+    "title": "\ud83c\udf89 MP3WAP v2.0 Launched!",
+    "description": "News: \"MP3WAP v2.0 Launched!\"",
+    "icon": "\ud83d\udcf0",
+    "createdAt": "2026-06-20T09:00:00Z"
+  },
+  {
+    "id": "upd-003",
+    "type": "song_added",
+    "refId": "sample-002",
+    "title": "Shape of You",
+    "description": "New song \"Shape of You\" by Ed Sheeran",
+    "icon": "\ud83c\udfb5",
+    "createdAt": "2026-06-19T14:30:00Z"
+  },
+  {
+    "id": "upd-004",
+    "type": "news_posted",
+    "refId": "news-002",
+    "title": "\ud83d\udce2 New Feature: Folder Organization",
+    "description": "News: \"New Feature: Folder Organization\"",
+    "icon": "\ud83d\udcf0",
+    "createdAt": "2026-06-19T10:00:00Z"
+  },
+  {
+    "id": "upd-005",
+    "type": "song_added",
+    "refId": "sample-003",
+    "title": "Bohemian Rhapsody",
+    "description": "New song \"Bohemian Rhapsody\" by Queen",
+    "icon": "\ud83c\udfb5",
+    "createdAt": "2026-06-18T09:00:00Z"
+  },
+  {
+    "id": "upd-006",
+    "type": "folder_created",
+    "refId": "folder-001",
+    "title": "Bollywood Hits",
+    "description": "New folder \"Bollywood Hits\" created",
+    "icon": "\ud83d\udcc1",
+    "createdAt": "2026-06-18T12:00:00Z"
+  },
+  {
+    "id": "upd-007",
+    "type": "song_added",
+    "refId": "sample-004",
+    "title": "Lose Yourself",
+    "description": "New song \"Lose Yourself\" by Eminem",
+    "icon": "\ud83c\udfb5",
+    "createdAt": "2026-06-17T16:00:00Z"
+  },
+  {
+    "id": "upd-008",
+    "type": "folder_created",
+    "refId": "folder-002",
+    "title": "Classic Rock",
+    "description": "New folder \"Classic Rock\" created",
+    "icon": "\ud83d\udcc1",
+    "createdAt": "2026-06-17T12:00:00Z"
+  }
+]

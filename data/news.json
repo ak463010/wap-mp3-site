@@ -1,0 +1,26 @@
+[
+  {
+    "id": "news-001",
+    "title": "\ud83c\udf89 MP3WAP v2.0 Launched!",
+    "content": "We're excited to announce the launch of MP3WAP v2.0! This major update brings:\n\n\u2022 Enhanced WAP-style retro design\n\u2022 New folder system to organize your music\n\u2022 Real-time activity feed showing latest updates\n\u2022 Improved search functionality\n\u2022 Better mobile experience\n\nStart exploring and upload your favorite tracks today!",
+    "excerpt": "We're excited to announce the launch of MP3WAP v2.0! This major update brings...",
+    "author": "Admin",
+    "createdAt": "2026-06-20T09:00:00Z"
+  },
+  {
+    "id": "news-002",
+    "title": "\ud83d\udce2 New Feature: Folder Organization",
+    "content": "You can now create folders to organize your MP3 collection! Group songs by genre, artist, or any category you like. Simply go to the Folders section to create and manage your folders.\n\nUploaded songs can be assigned to a folder for easy browsing.",
+    "excerpt": "You can now create folders to organize your MP3 collection!",
+    "author": "Admin",
+    "createdAt": "2026-06-19T10:00:00Z"
+  },
+  {
+    "id": "news-003",
+    "title": "\ud83d\udcca Site Milestone: 100 Downloads!",
+    "content": "We've reached 100 total downloads! Thank you to all our users for your support. Keep uploading and sharing your favorite music with the community.\n\nStay tuned for more features coming soon!",
+    "excerpt": "We've reached 100 total downloads! Thank you to all our users.",
+    "author": "Admin",
+    "createdAt": "2026-06-18T15:00:00Z"
+  }
+]
