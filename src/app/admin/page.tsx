@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 interface Stats {
   totalSongs: number;
@@ -12,6 +13,8 @@ interface Stats {
 }
 
 export default function AdminDashboard() {
+  const router = useRouter();
+  const [checking, setChecking] = useState(true);
   const [stats, setStats] = useState<Stats | null>(null);
   const [recentSongs, setRecentSongs] = useState<any[]>([]);
   const [recentUpdates, setRecentUpdates] = useState<any[]>([]);
@@ -19,15 +22,25 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     fetch('/api/admin/stats')
-      .then(r => r.json())
+      .then(r => {
+        if (r.status === 401) {
+          router.push('/admin/login');
+          return null;
+        }
+        setChecking(false);
+        return r.json();
+      })
       .then(data => {
+        if (!data) return;
         setStats(data.stats);
         setRecentSongs(data.recentSongs || []);
         setRecentUpdates(data.recentUpdates || []);
         setSettings(data.settings || {});
       })
-      .catch(() => {});
+      .catch(() => router.push('/admin/login'));
   }, []);
+
+  if (checking) return null;
 
   return (
     <>
