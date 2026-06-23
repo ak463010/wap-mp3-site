@@ -17,11 +17,18 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const router = useRouter();
   const [auth, setAuth] = useState<boolean | null>(null);
 
+  // Don't check auth on the login page itself
+  const isLoginPage = pathname === '/admin/login';
+
   useEffect(() => {
+    if (isLoginPage) {
+      setAuth(true);
+      return;
+    }
     fetch('/api/admin/stats')
       .then(r => { if (r.ok) setAuth(true); else setAuth(false); })
       .catch(() => setAuth(false));
-  }, []);
+  }, [isLoginPage]);
 
   if (auth === null) {
     return (
@@ -32,7 +39,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   if (!auth) {
-    router.push('/admin/login');
+    // Middleware already handles redirect, but keep as fallback
+    if (!isLoginPage) router.push('/admin/login');
     return null;
   }
 
