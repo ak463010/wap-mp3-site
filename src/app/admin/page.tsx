@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import '../admin/admin.css';
 
 interface Stats {
   totalSongs: number;
@@ -14,20 +15,24 @@ interface Stats {
 
 export default function AdminDashboard() {
   const router = useRouter();
-  const [checking, setChecking] = useState(true);
+  const [authState, setAuthState] = useState<'loading' | 'login' | 'ok'>('loading');
   const [stats, setStats] = useState<Stats | null>(null);
   const [recentSongs, setRecentSongs] = useState<any[]>([]);
   const [recentUpdates, setRecentUpdates] = useState<any[]>([]);
   const [settings, setSettings] = useState<Record<string, string>>({});
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [loginError, setLoginError] = useState('');
+  const [loginLoading, setLoginLoading] = useState(false);
 
   useEffect(() => {
     fetch('/api/admin/stats')
       .then(r => {
         if (r.status === 401) {
-          router.push('/admin/login');
+          setAuthState('login');
           return null;
         }
-        setChecking(false);
+        setAuthState('ok');
         return r.json();
       })
       .then(data => {
@@ -37,10 +42,70 @@ export default function AdminDashboard() {
         setRecentUpdates(data.recentUpdates || []);
         setSettings(data.settings || {});
       })
-      .catch(() => router.push('/admin/login'));
+      .catch(() => setAuthState('login'));
   }, []);
 
-  if (checking) return null;
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoginLoading(true);
+    setLoginError('');
+
+    try {
+      const res = await fetch('/api/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
+      });
+
+      if (res.ok) {
+        router.refresh();
+        window.location.reload();
+      } else {
+        const data = await res.json();
+        setLoginError(data.error || 'Login failed');
+      }
+    } catch {
+      setLoginError('Connection failed');
+    } finally {
+      setLoginLoading(false);
+    }
+  };
+
+  // Show login form when not authenticated
+  if (authState === 'loading') return null;
+  if (authState === 'login') {
+    return (
+      <div className="admin-body">
+        <div className="admin-login-page">
+          <div className="admin-login-box">
+            <h1>MP3WAP</h1>
+            <p>Sign in to the admin panel</p>
+
+            {loginError && <div className="admin-alert admin-alert-error">{loginError}</div>}
+
+            <form onSubmit={handleLogin}>
+              <label className="admin-label">Username</label>
+              <input className="admin-input" type="text" value={username}
+                onChange={e => setUsername(e.target.value)} placeholder="admin"
+                autoFocus />
+
+              <label className="admin-label">Password</label>
+              <input className="admin-input" type="password" value={password}
+                onChange={e => setPassword(e.target.value)} placeholder="••••••" />
+
+              <button type="submit" className="admin-btn admin-btn-primary" disabled={loginLoading}>
+                {loginLoading ? 'Signing in...' : 'Sign In'}
+              </button>
+            </form>
+
+            <div style={{ textAlign: 'center', marginTop: 16, fontSize: 12, color: '#8b8fa3' }}>
+              Default: admin / admin123
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
