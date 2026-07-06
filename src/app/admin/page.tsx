@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import '../admin/admin.css';
+import './admin.css';
 
 interface Stats {
   totalSongs: number;

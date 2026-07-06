@@ -15,25 +15,33 @@ const navItems = [
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
+  const isLoginPage = pathname === '/admin/login';
   const [auth, setAuth] = useState<boolean | null>(null);
 
   useEffect(() => {
+    if (isLoginPage) return;
+    setAuth(null);
     fetch('/api/admin/stats')
-      .then(r => { if (r.ok) setAuth(true); else setAuth(false); })
+      .then(r => setAuth(r.ok))
       .catch(() => setAuth(false));
-  }, []);
+  }, [isLoginPage, pathname]);
 
-  if (auth === null) {
+  useEffect(() => {
+    if (auth === false && !isLoginPage) {
+      router.push('/admin/login');
+    }
+  }, [auth, isLoginPage, router]);
+
+  if (isLoginPage) {
+    return <>{children}</>;
+  }
+
+  if (!auth) {
     return (
       <div className="admin-body" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
         <div className="admin-spinner" style={{ width: 32, height: 32 }} />
       </div>
     );
-  }
-
-  if (!auth) {
-    router.push('/admin/login');
-    return null;
   }
 
   const handleLogout = async () => {

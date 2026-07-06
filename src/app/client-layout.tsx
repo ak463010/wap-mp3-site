@@ -27,8 +27,12 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
     setTime(`${d} | ${t}`);
   }, []);
 
+  if (pathname.startsWith('/admin')) {
+    return <>{children}</>;
+  }
+
   return (
-    <>
+    <div className="wap-container">
       {/* WAP Header */}
       <div className="wap-header">
         <h1>◈ MP3WAP ◈</h1>
@@ -69,6 +73,6 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
           Best viewed on mobile | All files for download purposes only
         </div>
       </footer>
-    </>
+    </div>
   );
 }

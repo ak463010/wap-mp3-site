@@ -17,9 +17,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <div className="wap-container">
-          <ClientLayout>{children}</ClientLayout>
-        </div>
+        <ClientLayout>{children}</ClientLayout>
       </body>
     </html>
   );
