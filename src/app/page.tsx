@@ -16,7 +16,7 @@ export default function HomePage() {
       <div className="wap-card" style={{ borderLeft: '3px solid #00bcd4' }}>
         <h3>◈ Welcome to MP3WAP ◈</h3>
         <p style={{ fontSize: 11, color: '#8899aa', marginTop: 4 }}>
-          Your destination for free MP3 downloads. Browse songs, create folders,
+          Your destination for free MP3 downloads. Browse songs, explore folders,
           and stay updated with the latest music.
         </p>
       </div>
@@ -36,8 +36,8 @@ export default function HomePage() {
         <Link href="/songs" className="wap-btn wap-btn-primary" style={{ flex: 1, textAlign: 'center' }}>
           🎵 Browse Songs
         </Link>
-        <Link href="/songs/upload" className="wap-btn wap-btn-success" style={{ flex: 1, textAlign: 'center' }}>
-          📤 Upload MP3
+        <Link href="/folders" className="wap-btn" style={{ flex: 1, textAlign: 'center' }}>
+          📁 Browse Folders
         </Link>
       </div>
 
@@ -48,7 +48,7 @@ export default function HomePage() {
 
         {latestSongs.length === 0 ? (
           <p style={{ color: '#556677', fontStyle: 'italic', padding: 8 }}>
-            No songs uploaded yet. Be the first!
+            No songs uploaded yet.
           </p>
         ) : (
           latestSongs.map(song => (
@@ -141,7 +141,7 @@ export default function HomePage() {
 
       {/* Site Update Info */}
       <div className="wap-ticker">
-        <span>📢 MP3WAP v2.0 — New features: Folder organization, News system, Activity feed, and more! Upload your MP3s now! 📢</span>
+        <span>📢 MP3WAP v2.0 — Browse MP3 songs, organized folders, latest news, and activity updates! 📢</span>
       </div>
     </>
   );

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { v4 as uuidv4 } from 'uuid';
-import { addNews, getNews, getNewsItem, deleteNews } from '@/lib/data';
+import { requireAdmin } from '@/lib/auth';
+import { addNews, getNews } from '@/lib/data';
 import { addUpdate } from '@/lib/data';
 import type { NewsItem } from '@/lib/types';
 
@@ -11,6 +12,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    await requireAdmin();
     const body = await request.json();
     const { title, content, author } = body;
 
@@ -40,7 +42,8 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json({ success: true, news });
-  } catch (e) {
+  } catch (e: any) {
+    if (e.message === 'Unauthorized') return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
   }
 }

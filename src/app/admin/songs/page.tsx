@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
+import { extractMp3Tags, titleFromFileName } from '@/lib/mp3-tags';
 
 interface Song {
   id: string;
@@ -18,13 +18,24 @@ interface Song {
   createdAt: string;
 }
 
+interface FolderOption {
+  id: string;
+  name: string;
+}
+
+function getErrorMessage(error: unknown, fallback: string) {
+  return error instanceof Error ? error.message : fallback;
+}
+
 export default function AdminSongsPage() {
   const [songs, setSongs] = useState<Song[]>([]);
   const [search, setSearch] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState<Song | null>(null);
-  const [folders, setFolders] = useState<any[]>([]);
+  const [folders, setFolders] = useState<FolderOption[]>([]);
   const [message, setMessage] = useState<{ type: string; text: string } | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [tagStatus, setTagStatus] = useState('');
 
   // Form fields
   const [title, setTitle] = useState('');
@@ -34,6 +45,7 @@ export default function AdminSongsPage() {
   const [year, setYear] = useState('');
   const [description, setDescription] = useState('');
   const [folderId, setFolderId] = useState('');
+  const [file, setFile] = useState<File | null>(null);
 
   const loadSongs = async () => {
     const url = search ? `/api/admin/songs?q=${encodeURIComponent(search)}` : '/api/admin/songs';
@@ -47,10 +59,21 @@ export default function AdminSongsPage() {
     fetch('/api/admin/folders').then(r => r.json()).then(data => setFolders(data.folders || [])).catch(() => {});
   }, []);
 
+  const resetForm = () => {
+    setTitle('');
+    setArtist('');
+    setAlbum('');
+    setGenre('');
+    setYear('');
+    setDescription('');
+    setFolderId('');
+    setFile(null);
+    setTagStatus('');
+  };
+
   const openCreate = () => {
     setEditing(null);
-    setTitle(''); setArtist(''); setAlbum(''); setGenre('');
-    setYear(''); setDescription(''); setFolderId('');
+    resetForm();
     setShowModal(true);
     setMessage(null);
   };
@@ -64,15 +87,57 @@ export default function AdminSongsPage() {
     setYear(song.year?.toString() || '');
     setDescription(song.description || '');
     setFolderId(song.folderId || '');
+    setFile(null);
+    setTagStatus('');
     setShowModal(true);
     setMessage(null);
   };
 
+  const handleFileChange = async (selected: File | null) => {
+    setFile(selected);
+    setTagStatus('');
+
+    if (!selected) return;
+
+    if (!selected.name.toLowerCase().endsWith('.mp3')) {
+      setTagStatus('Only MP3 files are allowed.');
+      return;
+    }
+
+    try {
+      const buffer = await selected.arrayBuffer();
+      const tags = extractMp3Tags(new Uint8Array(buffer));
+      const found = [tags.title, tags.artist, tags.album, tags.genre, tags.year].filter(Boolean).length;
+
+      setTitle(tags.title || titleFromFileName(selected.name));
+      setArtist(tags.artist || 'Unknown Artist');
+      setAlbum(tags.album || '');
+      setGenre(tags.genre || '');
+      setYear(tags.year?.toString() || '');
+      setTagStatus(found > 0 ? `Auto-filled ${found} tag${found === 1 ? '' : 's'} from the MP3.` : 'No ID3 tags found; using the file name as title.');
+    } catch {
+      setTitle(current => current || titleFromFileName(selected.name));
+      setTagStatus('Could not read ID3 tags; you can fill details manually.');
+    }
+  };
+
   const handleSave = async () => {
-    if (!title || !artist) {
+    if (editing && (!title.trim() || !artist.trim())) {
       setMessage({ type: 'error', text: 'Title and artist are required!' });
       return;
     }
+
+    if (!editing && !file) {
+      setMessage({ type: 'error', text: 'Choose an MP3 file to upload.' });
+      return;
+    }
+
+    if (file && !file.name.toLowerCase().endsWith('.mp3')) {
+      setMessage({ type: 'error', text: 'Only MP3 files are allowed!' });
+      return;
+    }
+
+    setSaving(true);
 
     try {
       if (editing) {
@@ -84,12 +149,29 @@ export default function AdminSongsPage() {
         if (!res.ok) throw new Error();
         setMessage({ type: 'success', text: 'Song updated!' });
       } else {
-        setMessage({ type: 'success', text: 'Song created! (use upload page for files)' });
+        const formData = new FormData();
+        formData.append('file', file as File);
+        formData.append('title', title);
+        formData.append('artist', artist);
+        formData.append('album', album);
+        formData.append('genre', genre);
+        formData.append('year', year);
+        formData.append('description', description);
+        formData.append('folderId', folderId);
+
+        const res = await fetch('/api/admin/songs', { method: 'POST', body: formData });
+        const data = await res.json();
+        if (!res.ok || !data.success) throw new Error(data.error || 'Upload failed');
+        setMessage({ type: 'success', text: `MP3 uploaded: ${data.song.title}` });
       }
+
       setShowModal(false);
+      resetForm();
       loadSongs();
-    } catch {
-      setMessage({ type: 'error', text: 'Save failed' });
+    } catch (error) {
+      setMessage({ type: 'error', text: getErrorMessage(error, 'Save failed') });
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -120,9 +202,9 @@ export default function AdminSongsPage() {
           <p>Manage your MP3 collection — {songs.length} songs</p>
         </div>
         <div className="admin-flex admin-gap-2">
-          <Link href="/songs/upload" className="admin-btn admin-btn-ghost" target="_blank">
-            Upload MP3
-          </Link>
+          <button className="admin-btn admin-btn-primary" onClick={openCreate}>
+            ⬆ Upload MP3
+          </button>
         </div>
       </div>
 
@@ -139,7 +221,7 @@ export default function AdminSongsPage() {
         </button>
       </div>
 
-      <div className="admin-card" style={{ padding: 0, overflow: 'hidden' }}>
+      <div className="admin-card admin-table-card">
         <table className="admin-table">
           <thead>
             <tr>
@@ -158,10 +240,10 @@ export default function AdminSongsPage() {
                   <div className="admin-empty">
                     <div className="icon">🎵</div>
                     <h3>No songs found</h3>
-                    <p>Upload MP3s from the upload page.</p>
-                    <Link href="/songs/upload" className="admin-btn admin-btn-primary admin-btn-sm" target="_blank">
-                      Go to Upload
-                    </Link>
+                    <p>Upload an MP3 and its ID3 tags will be extracted automatically.</p>
+                    <button className="admin-btn admin-btn-primary admin-btn-sm" onClick={openCreate}>
+                      Upload MP3
+                    </button>
                   </div>
                 </td>
               </tr>
@@ -188,21 +270,40 @@ export default function AdminSongsPage() {
         </table>
       </div>
 
-      {/* Edit Modal */}
       {showModal && (
         <div className="admin-modal-overlay" onClick={() => setShowModal(false)}>
           <div className="admin-modal" onClick={e => e.stopPropagation()}>
-            <h3>{editing ? '✏️ Edit Song' : '➕ New Song'}</h3>
-            <p>{editing ? `Editing: ${editing.title}` : 'Create a new song entry (upload file separately)'}</p>
+            <h3>{editing ? '✏️ Edit Song' : '⬆ Upload MP3'}</h3>
+            <p>{editing ? `Editing: ${editing.title}` : 'Upload an MP3. Title, artist, album, genre, and year are auto-filled from ID3 tags when available.'}</p>
+
+            {!editing && (
+              <>
+                <label className="admin-label">MP3 File *</label>
+                <input
+                  className="admin-input"
+                  type="file"
+                  accept=".mp3,audio/mpeg"
+                  onChange={e => handleFileChange(e.target.files?.[0] || null)}
+                />
+                {file && (
+                  <div style={{ fontSize: 12, color: '#8b8fa3', marginTop: 6 }}>
+                    {file.name} ({formatBytes(file.size)})
+                  </div>
+                )}
+                {tagStatus && (
+                  <div className="admin-help-text">{tagStatus}</div>
+                )}
+              </>
+            )}
 
             <div className="admin-form-grid">
               <div>
-                <label className="admin-label">Title *</label>
-                <input className="admin-input" value={title} onChange={e => setTitle(e.target.value)} />
+                <label className="admin-label">Title {!editing && '(auto)'}</label>
+                <input className="admin-input" value={title} onChange={e => setTitle(e.target.value)} placeholder="Auto-filled from MP3 tag" />
               </div>
               <div>
-                <label className="admin-label">Artist *</label>
-                <input className="admin-input" value={artist} onChange={e => setArtist(e.target.value)} />
+                <label className="admin-label">Artist {!editing && '(auto)'}</label>
+                <input className="admin-input" value={artist} onChange={e => setArtist(e.target.value)} placeholder="Auto-filled from MP3 tag" />
               </div>
               <div>
                 <label className="admin-label">Album</label>
@@ -217,13 +318,13 @@ export default function AdminSongsPage() {
               </div>
               <div>
                 <label className="admin-label">Year</label>
-                <input className="admin-input" type="number" value={year} onChange={e => setYear(e.target.value)} />
+                <input className="admin-input" type="number" min="1900" max="2099" value={year} onChange={e => setYear(e.target.value)} />
               </div>
               <div>
                 <label className="admin-label">Folder</label>
                 <select className="admin-select" value={folderId} onChange={e => setFolderId(e.target.value)}>
                   <option value="">— No folder —</option>
-                  {folders.map((f: any) => <option key={f.id} value={f.id}>{f.name}</option>)}
+                  {folders.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
                 </select>
               </div>
             </div>
@@ -232,10 +333,10 @@ export default function AdminSongsPage() {
             <textarea className="admin-textarea" value={description} onChange={e => setDescription(e.target.value)} />
 
             <div className="admin-flex admin-gap-2 admin-mt-4">
-              <button className="admin-btn admin-btn-primary" onClick={handleSave}>
-                {editing ? 'Save Changes' : 'Create Song'}
+              <button className="admin-btn admin-btn-primary" onClick={handleSave} disabled={saving}>
+                {saving ? 'Saving...' : editing ? 'Save Changes' : 'Upload MP3'}
               </button>
-              <button className="admin-btn admin-btn-ghost" onClick={() => setShowModal(false)}>
+              <button className="admin-btn admin-btn-ghost" onClick={() => setShowModal(false)} disabled={saving}>
                 Cancel
               </button>
             </div>

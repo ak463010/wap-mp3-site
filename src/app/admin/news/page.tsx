@@ -68,7 +68,7 @@ export default function AdminNewsPage() {
         <div className={`admin-alert admin-alert-${message.type}`}>{message.text}</div>
       )}
 
-      <div className="admin-card" style={{ padding: 0, overflow: 'hidden' }}>
+      <div className="admin-card admin-table-card">
         <table className="admin-table">
           <thead>
             <tr>

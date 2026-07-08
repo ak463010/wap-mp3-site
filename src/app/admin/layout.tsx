@@ -17,18 +17,31 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const router = useRouter();
   const isLoginPage = pathname === '/admin/login';
   const [auth, setAuth] = useState<boolean | null>(null);
+  const [loadingPath, setLoadingPath] = useState<string | null>(null);
 
   useEffect(() => {
-    if (isLoginPage) return;
-    setAuth(null);
+    if (isLoginPage) {
+      setAuth(null);
+      return;
+    }
+
+    let cancelled = false;
+    setAuth(current => current === true ? true : null);
+
     fetch('/api/admin/stats')
-      .then(r => setAuth(r.ok))
-      .catch(() => setAuth(false));
-  }, [isLoginPage, pathname]);
+      .then(r => { if (!cancelled) setAuth(r.ok); })
+      .catch(() => { if (!cancelled) setAuth(false); });
+
+    return () => { cancelled = true; };
+  }, [isLoginPage]);
+
+  useEffect(() => {
+    setLoadingPath(null);
+  }, [pathname]);
 
   useEffect(() => {
     if (auth === false && !isLoginPage) {
-      router.push('/admin/login');
+      router.replace('/admin/login');
     }
   }, [auth, isLoginPage, router]);
 
@@ -36,12 +49,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     return <>{children}</>;
   }
 
-  if (!auth) {
+  if (auth === null) {
     return (
       <div className="admin-body" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
         <div className="admin-spinner" style={{ width: 32, height: 32 }} />
       </div>
     );
+  }
+
+  if (auth === false) {
+    return null;
   }
 
   const handleLogout = async () => {
@@ -52,6 +69,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   return (
     <div className="admin-body">
+      {loadingPath && <div className="admin-top-loader" />}
       <div className="admin-layout">
         {/* Sidebar */}
         <aside className="admin-sidebar">
@@ -64,6 +82,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <Link
                 key={item.href}
                 href={item.href}
+                prefetch
+                onClick={() => {
+                  if (pathname !== item.href) setLoadingPath(item.href);
+                }}
                 className={`admin-nav-item ${pathname === item.href ? 'active' : ''}`}
               >
                 <span className="icon">{item.icon}</span>

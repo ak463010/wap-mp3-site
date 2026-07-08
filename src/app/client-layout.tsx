@@ -8,7 +8,6 @@ const navItems = [
   { href: '/', label: 'Home' },
   { href: '/songs', label: 'Songs' },
   { href: '/folders', label: 'Folders' },
-  { href: '/songs/upload', label: 'Upload' },
   { href: '/news', label: 'News' },
   { href: '/latest', label: 'Updates' },
   { href: '/about', label: 'About' },
@@ -65,9 +64,8 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
       <footer className="wap-footer">
         <div>MP3WAP v2.0 — Powered by Next.js</div>
         <div style={{ marginTop: 4 }}>
-          <a href="/">Home</a> | <a href="/songs">Songs</a> |{' '}
-          <a href="/folders">Folders</a> | <a href="/news">News</a> |{' '}
-          <a href="/songs/upload">Upload</a>
+          <Link href="/">Home</Link> | <Link href="/songs">Songs</Link> |{' '}
+          <Link href="/folders">Folders</Link> | <Link href="/news">News</Link>
         </div>
         <div style={{ marginTop: 4 }}>
           Best viewed on mobile | All files for download purposes only

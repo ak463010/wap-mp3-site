@@ -81,9 +81,9 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+      <div className="admin-dashboard-grid">
         {/* Recent Songs */}
-        <div className="admin-card">
+        <div className="admin-card admin-table-card">
           <div className="admin-card-header">
             <h3>🎵 Recent Songs</h3>
             <Link href="/admin/songs" className="admin-btn admin-btn-ghost admin-btn-sm">View All</Link>
@@ -135,10 +135,7 @@ export default function AdminDashboard() {
           ) : (
             <div>
               {recentUpdates.map((upd: any) => (
-                <div key={upd.id} style={{
-                  display: 'flex', gap: 10, alignItems: 'flex-start',
-                  padding: '8px 0', borderBottom: '1px solid #2a2d3a', fontSize: 13
-                }}>
+                <div key={upd.id} className="admin-activity-item">
                   <span style={{ fontSize: 16 }}>{upd.icon}</span>
                   <div>
                     <div style={{ fontWeight: 500 }}>{upd.title}</div>
@@ -159,7 +156,7 @@ export default function AdminDashboard() {
         <div className="admin-card-header">
           <h3>🚀 Quick Actions</h3>
         </div>
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        <div className="admin-quick-actions">
           <Link href="/admin/songs" className="admin-btn admin-btn-primary">🎵 Manage Songs</Link>
           <Link href="/admin/folders" className="admin-btn admin-btn-success">📁 Manage Folders</Link>
           <Link href="/admin/news" className="admin-btn" style={{ background: '#3b82f6', color: '#fff' }}>📰 Manage News</Link>
@@ -172,9 +169,9 @@ export default function AdminDashboard() {
         <div className="admin-card-header">
           <h3>⚙️ Site Settings</h3>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, fontSize: 13 }}>
+        <div className="admin-settings-grid">
           {Object.entries(settings).map(([key, value]) => (
-            <div key={key} style={{ display: 'flex', gap: 8 }}>
+            <div key={key} className="admin-setting-row">
               <span style={{ color: '#8b8fa3' }}>{key.replace(/_/g, ' ')}:</span>
               <span style={{ fontWeight: 500 }}>{value}</span>
             </div>

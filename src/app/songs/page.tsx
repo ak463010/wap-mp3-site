@@ -27,9 +27,6 @@ export default async function SongsPage({
         <h2 style={{ color: '#4fc3f7', fontSize: 14, fontWeight: 'bold' }}>
           🎵 All Songs {query && <span style={{ color: '#8899aa', fontWeight: 'normal' }}>— &quot;{query}&quot;</span>}
         </h2>
-        <Link href="/songs/upload" className="wap-btn" style={{ fontSize: 10 }}>
-          + Upload
-        </Link>
       </div>
 
       <div className="wap-stats" style={{ marginBottom: 8 }}>

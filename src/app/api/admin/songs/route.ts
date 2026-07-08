@@ -1,9 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/auth';
 import { getDb } from '@/lib/db';
+import { extractMp3Tags, titleFromFileName } from '@/lib/mp3-tags';
 import { v4 as uuidv4 } from 'uuid';
+import { mkdir, writeFile } from 'fs/promises';
+import * as path from 'path';
 
 export const dynamic = 'force-dynamic';
+
+function formValue(formData: FormData, key: string): string {
+  return (formData.get(key) as string | null)?.trim() || '';
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -44,37 +51,65 @@ export async function POST(request: NextRequest) {
   try {
     await requireAdmin();
     const formData = await request.formData();
-    const db = getDb();
+    const file = formData.get('file') as File | null;
+
+    if (!file) {
+      return NextResponse.json({ error: 'MP3 file is required' }, { status: 400 });
+    }
+
+    if (!file.name.toLowerCase().endsWith('.mp3')) {
+      return NextResponse.json({ error: 'Only MP3 files are allowed' }, { status: 400 });
+    }
 
     const id = uuidv4();
-    const now = new Date().toISOString();
+    const safeName = `${id}.mp3`;
+    const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'songs');
+    const uploadPath = path.join(uploadDir, safeName);
+    const bytes = await file.arrayBuffer();
+    const buffer = Buffer.from(bytes);
+    const tags = extractMp3Tags(new Uint8Array(buffer));
 
+    const title = formValue(formData, 'title') || tags.title || titleFromFileName(file.name);
+    const artist = formValue(formData, 'artist') || tags.artist || 'Unknown Artist';
+    const album = formValue(formData, 'album') || tags.album || '';
+    const genre = formValue(formData, 'genre') || tags.genre || '';
+    const yearValue = formValue(formData, 'year');
+    const year = yearValue ? parseInt(yearValue) : tags.year || null;
+    const description = formValue(formData, 'description');
+    const folderId = formValue(formData, 'folderId');
+
+    await mkdir(uploadDir, { recursive: true });
+    await writeFile(uploadPath, buffer);
+
+    const db = getDb();
+    const now = new Date().toISOString();
     const song = {
       id,
-      title: formData.get('title') as string || '',
-      artist: formData.get('artist') as string || '',
-      album: formData.get('album') as string || '',
-      genre: formData.get('genre') as string || '',
-      year: formData.get('year') ? parseInt(formData.get('year') as string) : null,
-      fileName: formData.get('fileName') as string || '',
-      fileSize: parseInt(formData.get('fileSize') as string) || 0,
-      description: formData.get('description') as string || '',
-      folderId: formData.get('folderId') as string || '',
-      downloads: parseInt(formData.get('downloads') as string) || 0,
+      title,
+      artist,
+      album,
+      genre,
+      year,
+      fileName: safeName,
+      fileSize: file.size,
+      duration: '',
+      description,
+      folderId,
+      downloads: 0,
       createdAt: now,
       updatedAt: now,
     };
 
-    db.prepare(`INSERT INTO songs (id, title, artist, album, genre, year, fileName, fileSize, description, folderId, downloads, createdAt, updatedAt) VALUES (@id, @title, @artist, @album, @genre, @year, @fileName, @fileSize, @description, @folderId, @downloads, @createdAt, @updatedAt)`).run(song);
+    db.prepare(`INSERT INTO songs (id, title, artist, album, genre, year, fileName, fileSize, duration, description, folderId, downloads, createdAt, updatedAt) VALUES (@id, @title, @artist, @album, @genre, @year, @fileName, @fileSize, @duration, @description, @folderId, @downloads, @createdAt, @updatedAt)`).run(song);
 
-    // Add update entry
     db.prepare('INSERT INTO updates (id, type, refId, title, description, icon, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?)').run(
-      uuidv4(), 'song_added', id, song.title, `New song added by admin`, '🎵', now
+      uuidv4(), 'song_added', id, song.title, `New song "${song.title}" by ${song.artist}`, '🎵', now
     );
 
-    return NextResponse.json({ success: true, song });
+    return NextResponse.json({ success: true, song, tags });
   } catch (e: any) {
+    console.error('Admin upload error:', e);
     if (e.message === 'Unauthorized') return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    return NextResponse.json({ error: 'Failed to create song' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to upload MP3' }, { status: 500 });
   }
 }

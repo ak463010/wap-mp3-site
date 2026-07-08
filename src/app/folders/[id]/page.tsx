@@ -32,11 +32,6 @@ export default async function FolderDetailPage({
           <p style={{ color: '#556677', textAlign: 'center', padding: 20 }}>
             No songs in this folder yet.
           </p>
-          <div style={{ textAlign: 'center' }}>
-            <Link href={`/songs/upload`} className="wap-btn" style={{ fontSize: 10 }}>
-              Upload a Song to this Folder
-            </Link>
-          </div>
         </div>
       ) : (
         <div className="wap-card" style={{ padding: 0 }}>
